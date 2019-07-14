@@ -98,12 +98,16 @@ class BaseAbility {
             return 'cost';
         }
         if(this.targets.length === 0) {
-            if(this.gameAction.length > 0 && !this.gameAction.some(gameAction => gameAction.hasLegalTarget(context))) {
+            if(this.gameAction.length > 0 && !this.checkGameActionsForPotential(context)) {
                 return 'condition';
             }
             return '';
         }
         return this.canResolveTargets(context) ? '' : 'target';
+    }
+
+    checkGameActionsForPotential(context) {
+        return this.gameAction.some(gameAction => gameAction.hasLegalTarget(context));
     }
 
     /**
@@ -113,11 +117,15 @@ class BaseAbility {
      */
     canPayCosts(context) {
         let contextCopy = context.copy({ stage: Stages.Cost });
-        return this.cost.every(cost => cost.canPay(contextCopy));
+        return this.getCosts(context).every(cost => cost.canPay(contextCopy));
+    }
+
+    getCosts(context) { // eslint-disable-line no-unused-vars
+        return this.cost;
     }
 
     resolveCosts(events, context, results) {
-        for(let cost of this.cost) {
+        for(let cost of this.getCosts(context)) {
             context.game.queueSimpleStep(() => {
                 if(!results.cancelled) {
                     if(cost.addEventsToArray) {
@@ -127,13 +135,15 @@ class BaseAbility {
                             cost.resolve(context, results);
                         }
                         context.game.queueSimpleStep(() => {
-                            let newEvents = cost.payEvent ? cost.payEvent(context) : context.game.getEvent('payCost', {}, () => cost.pay(context));
-                            if(Array.isArray(newEvents)) {
-                                for(let event of newEvents) {
-                                    events.push(event);
+                            if(!results.cancelled) {
+                                let newEvents = cost.payEvent ? cost.payEvent(context) : context.game.getEvent('payCost', {}, () => cost.pay(context));
+                                if(Array.isArray(newEvents)) {
+                                    for(let event of newEvents) {
+                                        events.push(event);
+                                    }
+                                } else {
+                                    events.push(newEvents);
                                 }
-                            } else {
-                                events.push(newEvents);
                             }
                         });
                     }
@@ -168,10 +178,16 @@ class BaseAbility {
     }
 
     resolveRemainingTargets(context, nextTarget) {
-        let index = this.targets.indexOf(nextTarget);
-        for(let target of this.targets.slice(index)) {
-            context.game.queueSimpleStep(() => target.resolve(context, {}));
+        const index = this.targets.indexOf(nextTarget);
+        let targets = this.targets.slice();
+        if(targets.slice(0, index).every(target => target.checkTarget(context))) {
+            targets = targets.slice(index);
         }
+        let targetResults = {};
+        for(const target of targets) {
+            context.game.queueSimpleStep(() => target.resolve(context, targetResults));
+        }
+        return targetResults;
     }
 
     hasLegalTargets(context) {

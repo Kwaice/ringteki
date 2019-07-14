@@ -11,13 +11,17 @@ class DaimyosGunbai extends DrawCard {
             initiateDuel: {
                 type: DuelTypes.Military,
                 opponentChoosesDuelTarget: true,
-                gameAction: duel => AbilityDsl.actions.ifAble({
-                    ifAbleAction: AbilityDsl.actions.attach(context => ({
-                        target: duel.winner,
-                        attachment: context.source
-                    })),
-                    otherwiseAction: AbilityDsl.actions.discardCard(context => ({ target: context.source }))
-                })
+                gameAction: duel => AbilityDsl.actions.attach(context => ({
+                    target: duel.winner,
+                    attachment: context.source
+                }))
+            },
+            then: {
+                thenCondition: () => true,
+                gameAction: AbilityDsl.actions.discardCard(context => ({
+                    target: context.source.location === Locations.Hand ? context.source : []
+                })),
+                message: context => context.source.location === Locations.Hand ? '{0} discards {1}' : null
             }
         });
     }

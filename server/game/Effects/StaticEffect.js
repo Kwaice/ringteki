@@ -13,6 +13,20 @@ const binaryCardEffects = [
     EffectNames.ShowTopConflictCard
 ];
 
+const MilitaryModifiers = [
+    EffectNames.ModifyBaseMilitarySkill,
+    EffectNames.ModifyMilitarySkill,
+    EffectNames.ModifyMilitarySkillMultiplier,
+    EffectNames.ModifyBothSkills
+];
+
+const PoliticalModifiers = [
+    EffectNames.ModifyBasePoliticalSkill,
+    EffectNames.ModifyPoliticalSkill,
+    EffectNames.ModifyPoliticalSkillMultiplier,
+    EffectNames.ModifyBothSkills
+];
+
 const hasDash = {
     modifyBaseMilitarySkill: card => card.hasDash('military'),
     modifyBasePoliticalSkill: card => card.hasDash('political'),
@@ -45,7 +59,7 @@ const conflictingEffects = {
 };
 
 class StaticEffect {
-    constructor(type = '', value) {
+    constructor(type, value) {
         this.type = type;
         if(value instanceof EffectValue) {
             this.value = value;
@@ -84,6 +98,18 @@ class StaticEffect {
         return !hasDash[this.type] || !hasDash[this.type](target, this.value);
     }
 
+    isMilitaryModifier() {
+        return MilitaryModifiers.includes(this.type);
+    }
+
+    isPoliticalModifier() {
+        return PoliticalModifiers.includes(this.type);
+    }
+
+    isSkillModifier() {
+        return this.isMilitaryModifier() || this.isPoliticalModifier();
+    }
+
     checkConflictingEffects(type, target) {
         if(binaryCardEffects.includes(type)) {
             let matchingEffects = target.effects.filter(effect => effect.type === type);
@@ -94,9 +120,6 @@ class StaticEffect {
             return matchingEffects.every(effect => this.hasLongerDuration(effect) || effect.isConditional);
         }
         if(type === EffectNames.ModifyBothSkills) {
-            return this.checkConflictingEffects(EffectNames.ModifyMilitarySkill, target) || this.checkConflictingEffects(EffectNames.ModifyPoliticalSkill, target);
-        }
-        if(type === EffectNames.AddGloryToBothSkills) {
             return this.checkConflictingEffects(EffectNames.ModifyMilitarySkill, target) || this.checkConflictingEffects(EffectNames.ModifyPoliticalSkill, target);
         }
         if(type === EffectNames.HonorStatusDoesNotModifySkill) {

@@ -9,12 +9,14 @@ describe('Daimyo\'s Gunbai', function() {
                         hand: ['daimyo-s-gunbai', 'daimyo-s-gunbai']
                     },
                     player2: {
-                        inPlay: ['solemn-scholar']
+                        inPlay: ['solemn-scholar'],
+                        conflictDiscard: ['stay-your-hand']
                     }
                 });
 
                 this.dojiChallenger = this.player1.findCardByName('doji-challenger');
                 this.solemnScholar = this.player2.findCardByName('solemn-scholar');
+                this.stayYourHand = this.player2.findCardByName('stay-your-hand');
 
                 this.noMoreActions();
                 this.initiateConflict({
@@ -68,6 +70,7 @@ describe('Daimyo\'s Gunbai', function() {
                 this.player1.clickPrompt('1');
                 this.player2.clickPrompt('3');
                 expect(this.daimyosGunbai.location).toBe('conflict discard pile');
+                expect(this.getChatLogs(3)).toContain('player1 discards Daimyō\'s Gunbai');
             });
 
             it('should discard Gunbai if there is already one in play from the same controller', function() {
@@ -83,6 +86,18 @@ describe('Daimyo\'s Gunbai', function() {
                 this.player1.clickPrompt('1');
                 this.player2.clickPrompt('1');
                 expect(this.daimyosGunbai2.location).toBe('conflict discard pile');
+            });
+
+            it('should discard Gunbai if the duel is cancelled', function() {
+                this.player2.moveCard(this.stayYourHand, 'hand');
+                this.daimyosGunbai = this.player1.clickCard('daimyo-s-gunbai');
+                this.player1.clickCard(this.dojiChallenger);
+                this.player2.clickCard(this.solemnScholar);
+                expect(this.player2).toHavePrompt('Triggered Abilities');
+                expect(this.player2).toBeAbleToSelect(this.stayYourHand);
+                this.player2.clickCard(this.stayYourHand);
+                expect(this.daimyosGunbai.location).toBe('conflict discard pile');
+                expect(this.player2).toHavePrompt('Conflict Action Window');
             });
         });
     });

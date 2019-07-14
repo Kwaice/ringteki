@@ -27,12 +27,12 @@ export enum EffectNames {
     AbilityRestrictions = 'abilityRestrictions',
     AddElementAsAttacker = 'addElementAsAttacker',
     AddFaction = 'addFaction',
-    AddGloryToBothSkills = 'addGloryToBothSkills',
     AddKeyword = 'addKeyword',
     AddTrait = 'addTrait',
     Blank = 'blank',
     CanBeSeenWhenFacedown = 'canBeSeenWhenFacedown',
     CanOnlyBeDeclaredAsAttackerWithElement = 'canOnlyBeDeclaredAsAttackerWithElement',
+    CannotApplyLastingEffects = 'cannotApplyLastingEffects',
     CannotBeAttacked = 'cannotBeAttacked',
     CannotBidInDuels = 'cannotBidInDuels',
     CannotHaveConflictsDeclaredOfType = 'cannotHaveConflictsDeclaredOfType',
@@ -45,6 +45,7 @@ export enum EffectNames {
     DoesNotBow = 'doesNotBow',
     DoesNotReady = 'doesNotReady',
     GainAbility = 'gainAbility',
+    GainExtraFateWhenPlayed = 'gainExtraFateWhenPlayed',
     GainPlayAction = 'gainPlayAction',
     HideWhenFaceUp = 'hideWhenFaceUp',
     HonorStatusDoesNotAffectLeavePlay = 'honorStatusDoesNotAffectLeavePlay',
@@ -65,6 +66,7 @@ export enum EffectNames {
     MustBeChosen = 'mustBeChosen',
     MustBeDeclaredAsAttacker = 'mustBeDeclaredAsAttacker',
     MustBeDeclaredAsDefender = 'mustBeDeclaredAsDefender',
+    SetBaseDash = 'setBaseDash',
     SetBaseMilitarySkill = 'setBaseMilitarySkill',
     SetBasePoliticalSkill = 'setBasePoliticalSkill',
     SetBaseProvinceStrength = 'setBaseProvinceStrength',
@@ -75,6 +77,8 @@ export enum EffectNames {
     SetMilitarySkill = 'setMilitarySkill',
     SetPoliticalSkill = 'setPoliticalSkill',
     SetProvinceStrength = 'setProvinceStrength',
+    SwitchBaseSkills = 'switchBaseSkills',
+    SuppressEffects = 'suppressEffects',
     TakeControl = 'takeControl',
     TerminalCondition = 'terminalCondition',
     AddElement = 'addElement',
@@ -82,6 +86,7 @@ export enum EffectNames {
     ConsiderRingAsClaimed = 'considerAsClaimed',
     AdditionalCharactersInConflict = 'additionalCharactersInConflict',
     AdditionalConflict = 'additionalConflict',
+    AdditionalCost = 'additionalCost',
     AlternateFatePool = 'alternateFatePool',
     CannotDeclareConflictsOfType = 'cannotDeclareConflictsOfType',
     CanPlayFromOwn = 'canPlayFromOwn',
@@ -96,7 +101,8 @@ export enum EffectNames {
     ContributeToConflict = 'contribute',
     ChangeConflictSkillFunction = 'skillFunction',
     ModifyConflictElementsToResolve = 'modifyConflictElementsToResolve',
-    RestrictNumberOfDefenders = 'restrictNumberOfDefenders'
+    RestrictNumberOfDefenders = 'restrictNumberOfDefenders',
+    ResolveConflictEarly = 'resolveConflictEarly'
 };
 
 export enum Durations {
@@ -170,6 +176,7 @@ export enum EventNames {
     OnConflictDeclared = 'onConflictDeclared',
     OnCovertResolved = 'onCovertResolved',
     OnCardRevealed = 'onCardRevealed',
+    OnCardTurnedFacedown = 'onCardTurnedFacedown',
     OnDefendersDeclared = 'onDefendersDeclared',
     AfterConflict = 'afterConflict',
     OnBreakProvince = 'onBreakProvince',
@@ -223,8 +230,10 @@ export enum EventNames {
     OnModifyBid = 'onModifyBid',
     OnModifyFate = 'onModifyFate',
     OnSetHonorDial = 'onSetHonorDial',
+    OnSwitchConflictElement = 'onSwitchConflictElement',
     OnSwitchConflictType = 'onSwitchConflictType',
     OnTakeRing = 'onTakeRing',
+    OnSpendFate = 'onSpendFate',
     Unnamed = 'unnamedEvent'
 };
 

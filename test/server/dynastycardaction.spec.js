@@ -4,8 +4,9 @@ describe('DynastyCardAction', function () {
     beforeEach(function() {
         this.gameSpy = jasmine.createSpyObj('game', ['addMessage', 'on', 'removeListener', 'getEvent', 'openEventWindow']);
         this.playerSpy = jasmine.createSpyObj('player', ['isCardInPlayableLocation', 'replaceDynastyCard', 'getMinimumCost']);
-        this.cardSpy = jasmine.createSpyObj('card', ['getType', 'canPlay', 'isLimited', 'anotherUniqueInPlay']);
+        this.cardSpy = jasmine.createSpyObj('card', ['getType', 'canPlay', 'isLimited', 'anotherUniqueInPlay', 'sumEffects']);
         this.windowSpy = jasmine.createSpyObj('window', ['markActionAsTaken']);
+        this.cardSpy.sumEffects.and.returnValue(0);
         this.cardSpy.isDynasty = true;
         this.cardSpy.controller = this.playerSpy;
         this.cardSpy.owner = this.playerSpy;
@@ -59,26 +60,6 @@ describe('DynastyCardAction', function () {
 
             it('should return \'location\'', function() {
                 expect(this.action.meetsRequirements(this.context)).toBe('location');
-            });
-        });
-
-        xdescribe('when the card is an event', function() {
-            beforeEach(function() {
-                this.cardSpy.getType.and.returnValue('event');
-            });
-
-            it('should return false', function() {
-                expect(this.action.meetsRequirements(this.context)).toBe(false);
-            });
-        });
-
-        xdescribe('when the card is forbidden from being played in dynasty', function() {
-            beforeEach(function() {
-                this.cardSpy.isDynasty = false;
-            });
-
-            it('should return false', function() {
-                expect(this.action.meetsRequirements(this.context)).toBe(false);
             });
         });
 

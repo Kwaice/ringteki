@@ -13,7 +13,6 @@ export interface SelectCardProperties extends CardActionProperties {
     player?: Players;
     cardType?: CardTypes | CardTypes[];
     controller?: Players;
-    optional?: boolean;
     location?: Locations | Locations[];
     cardCondition?: (card: BaseCard, context: AbilityContext) => boolean;
     targets?: boolean;
@@ -47,7 +46,7 @@ export class SelectCardAction extends CardGameAction {
         let properties = super.getProperties(context, additionalProperties) as SelectCardProperties;
         properties.gameAction.setDefaultTarget(() => properties.target);
         if(!properties.selector) {
-            let cardCondition = (card, context) => 
+            let cardCondition = (card, context) =>
                 properties.gameAction.allTargetsLegal(context, Object.assign({}, additionalProperties, properties.subActionProperties(card))) && 
                 properties.cardCondition(card, context);
             properties.selector = CardSelector.for(Object.assign({}, properties, { cardCondition }));    
@@ -57,14 +56,14 @@ export class SelectCardAction extends CardGameAction {
 
     canAffect(card: BaseCard, context: AbilityContext, additionalProperties = {}): boolean {
         let properties = this.getProperties(context, additionalProperties);
-        let player = properties.targets && context.choosingPlayerOverride || (properties.player === Players.Opponent ? context.player.opponent : context.player);
+        let player = properties.targets && context.choosingPlayerOverride || properties.player === Players.Opponent && context.player.opponent || context.player;
         return properties.selector.canTarget(card, context, player);
     }
 
     hasLegalTarget(context: AbilityContext, additionalProperties = {}): boolean {
         let properties = this.getProperties(context, additionalProperties);
-        let player = properties.targets && context.choosingPlayerOverride || (properties.player === Players.Opponent ? context.player.opponent : context.player);
-        return properties.selector.optional || properties.selector.hasEnoughTargets(context, player);
+        let player = properties.targets && context.choosingPlayerOverride || properties.player === Players.Opponent && context.player.opponent || context.player;
+        return properties.selector.hasEnoughTargets(context, player);
     }
 
     addEventsToArray(events, context: AbilityContext, additionalProperties = {}): void {

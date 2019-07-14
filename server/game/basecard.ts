@@ -23,6 +23,7 @@ class BaseCard extends EffectSource {
     printedName: string;
     inConflict: boolean = false;
     type: CardTypes;
+    facedown: boolean;
     
     tokens: object = {};
     menu: _.Underscore<any> = _([]);
@@ -65,7 +66,7 @@ class BaseCard extends EffectSource {
     get actions(): CardAction[] {
         let actions = this.abilities.actions;
         if(this.anyEffect(EffectNames.CopyCharacter)) {
-            let mostRecentEffect = _.last(this.effects.filter(effect => effect.type === EffectNames.CopyCharacter));
+            let mostRecentEffect = _.last(this.getRawEffects().filter(effect => effect.type === EffectNames.CopyCharacter));
             actions = mostRecentEffect.value.getActions(this);
         }
         let effectActions = this.getEffects(EffectNames.GainAbility).filter(ability => ability.abilityType === AbilityTypes.Action);
@@ -76,7 +77,7 @@ class BaseCard extends EffectSource {
         const TriggeredAbilityTypes = [AbilityTypes.ForcedInterrupt, AbilityTypes.ForcedReaction, AbilityTypes.Interrupt, AbilityTypes.Reaction, AbilityTypes.WouldInterrupt];
         let reactions =  this.abilities.reactions;
         if(this.anyEffect(EffectNames.CopyCharacter)) {
-            let mostRecentEffect = _.last(this.effects.filter(effect => effect.type === EffectNames.CopyCharacter));
+            let mostRecentEffect = _.last(this.getRawEffects().filter(effect => effect.type === EffectNames.CopyCharacter));
             reactions = mostRecentEffect.value.getReactions(this);
         }
         let effectReactions = this.getEffects(EffectNames.GainAbility).filter(ability => TriggeredAbilityTypes.includes(ability.abilityType));
@@ -86,7 +87,7 @@ class BaseCard extends EffectSource {
     get persistentEffects(): any[] {
         let gainedPersistentEffects = this.getEffects(EffectNames.GainAbility).filter(ability => ability.abilityType === AbilityTypes.Persistent);
         if(this.anyEffect(EffectNames.CopyCharacter)) {
-            let mostRecentEffect = _.last(this.effects.filter(effect => effect.type === EffectNames.CopyCharacter));
+            let mostRecentEffect = _.last(this.getRawEffects().filter(effect => effect.type === EffectNames.CopyCharacter));
             return gainedPersistentEffects.concat(mostRecentEffect.value.getPersistentEffects());
         }
         return this.isBlank() ? gainedPersistentEffects : this.abilities.persistentEffects.concat(gainedPersistentEffects);
@@ -159,7 +160,6 @@ class BaseCard extends EffectSource {
         if(!allowedLocations.includes(location)) {
             throw new Error(`'${location}' is not a supported effect location.`);
         }
-
         this.abilities.persistentEffects.push(_.extend({ duration: Durations.Persistent, location: location }, properties));
     }
 
@@ -184,6 +184,21 @@ class BaseCard extends EffectSource {
             return this.printedFaction === faction && !this.anyEffect(EffectNames.AddFaction);
         }
         return this.printedFaction === faction || this.getEffects(EffectNames.AddFaction).includes(faction);
+    }
+
+    isInProvince(): boolean {
+        return [Locations.ProvinceOne, Locations.ProvinceTwo, Locations.ProvinceThree, 
+            Locations.ProvinceFour, Locations.StrongholdProvince].includes(this.location);
+    }
+
+    isInPlay(): boolean {
+        if(this.facedown) {
+            return false;
+        }
+        if([CardTypes.Holding, CardTypes.Province, CardTypes.Stronghold].includes(this.type)) {
+            return this.isInProvince();
+        }
+        return this.location === Locations.PlayArea;
     }
 
     applyAnyLocationPersistentEffects(): void {
@@ -271,7 +286,7 @@ class BaseCard extends EffectSource {
     }
 
     getModifiedLimitMax(player: Player, ability: CardAbility, max: number): number {
-        const effects = this.effects.filter(effect => effect.type === EffectNames.IncreaseLimitOnAbilities);
+        const effects = this.getRawEffects().filter(effect => effect.type === EffectNames.IncreaseLimitOnAbilities);
         return effects.reduce((total, effect) => {
             const value = effect.getValue(this);
             if((value === true || value === ability) && effect.context.player === player) {
@@ -400,7 +415,7 @@ class BaseCard extends EffectSource {
         // OR This is not my card, and it's either facedown or hidden from me
         if(isActivePlayer ? this.facedown && this.hideWhenFacedown() : (this.facedown || hideWhenFaceup || this.anyEffect(EffectNames.HideWhenFaceUp))) {
             let state = {
-                controller: this.controller.name,
+                controller: this.controller.getShortSummary(),
                 facedown: true,
                 inConflict: this.inConflict,
                 location: this.location

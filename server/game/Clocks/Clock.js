@@ -1,11 +1,13 @@
 class Clock {
     constructor(player, time) {
         this.player = player;
+        this.mainTime = time;
         this.timeLeft = time;
         this.mode = 'off';
         this.timerStart = 0;
         this.paused = false;
         this.stateId = 0;
+        this.name = 'Clock';
     }
 
     pause() {
@@ -39,6 +41,9 @@ class Clock {
         }
     }
 
+    reset() {
+    }
+
     opponentStart() {
         this.timerStart = Date.now();
         this.updateStateId();
@@ -67,7 +72,9 @@ class Clock {
         return {
             mode: this.mode,
             timeLeft: this.timeLeft,
-            stateId: this.stateId
+            stateId: this.stateId,
+            mainTime: this.mainTime,
+            name: this.name
         };
     }
 }

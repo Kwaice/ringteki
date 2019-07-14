@@ -1,6 +1,6 @@
 import AbilityContext = require('../AbilityContext');
 import Event = require('../Events/Event.js');
-import { CardTypes, EventNames } from '../Constants';
+import { CardTypes, EventNames, Stages } from '../Constants';
 
 import BaseCard = require('../basecard');
 import Ring = require ('../ring');
@@ -11,6 +11,8 @@ type PlayerOrRingOrCardOrToken = Player | Ring | BaseCard | StatusToken;
 
 export interface GameActionProperties {
     target?: PlayerOrRingOrCardOrToken | PlayerOrRingOrCardOrToken[];
+    cannotBeCancelled?: boolean;
+    optional?: boolean;
 }
 
 export class GameAction {
@@ -21,7 +23,7 @@ export class GameAction {
     name = '';
     cost = '';
     effect = '';
-    defaultProperties: GameActionProperties = {};
+    defaultProperties: GameActionProperties = { optional: false };
     getDefaultTargets: (context: AbilityContext) => any = context => this.defaultTargets(context);
 
     constructor(propertyFactory: GameActionProperties | ((context?: AbilityContext) => GameActionProperties) = {}) {
@@ -37,7 +39,7 @@ export class GameAction {
     }
 
     getProperties(context: AbilityContext, additionalProperties = {}): GameActionProperties {
-        let properties = Object.assign({ target: this.getDefaultTargets(context) }, this.defaultProperties, this.properties || this.propertyFactory(context), additionalProperties);
+        let properties = Object.assign({ target: this.getDefaultTargets(context) }, this.defaultProperties, additionalProperties, this.properties || this.propertyFactory(context));
         if(!Array.isArray(properties.target)) {
             properties.target = [properties.target];
         }
@@ -59,8 +61,9 @@ export class GameAction {
     }
 
     canAffect(target: any, context: AbilityContext, additionalProperties = {}): boolean {
-        return this.targetType.includes(target.type) && target.checkRestrictions(this.name, context) && 
-            !context.gameActionsResolutionChain.includes(this);
+        const { cannotBeCancelled } = this.getProperties(context, additionalProperties);
+        return this.targetType.includes(target.type) && !context.gameActionsResolutionChain.includes(this) &&
+            (context.stage === Stages.Effect && cannotBeCancelled || target.checkRestrictions(this.name, context));
     }
 
     hasLegalTarget(context: AbilityContext, additionalProperties = {}): boolean {
@@ -94,7 +97,8 @@ export class GameAction {
     }
 
     createEvent(target: any, context: AbilityContext, additionalProperties): Event {
-        let event = new Event(EventNames.Unnamed, {});
+        const { cannotBeCancelled } = this.getProperties(context, additionalProperties);
+        const event = new Event(EventNames.Unnamed, { cannotBeCancelled });
         event.checkFullyResolved = eventAtResolution => this.isEventFullyResolved(eventAtResolution, target, context, additionalProperties);
         return event;
     }
@@ -125,6 +129,11 @@ export class GameAction {
 
     isEventFullyResolved(event: Event, target: any, context: AbilityContext, additionalProperties = {}): boolean { // eslint-disable-line no-unused-vars
         return !event.cancelled && event.name === this.eventName;
+    }
+
+    isOptional(context: AbilityContext, additionalProperties = {}): boolean {
+        const { optional } = this.getProperties(context, additionalProperties);
+        return optional;
     }
 
     moveFateEventCondition(event): boolean {
